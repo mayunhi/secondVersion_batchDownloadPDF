@@ -1,0 +1,58 @@
+#!/usr/bin/python
+# -*- coding:utf-8 -*-
+#安装requests库、BeautifulSoup模块、：
+#.可以匹配任意的字符，*这个字符可以任意的0到多个。^表示开始，$表示结束。
+#*/+/?：+表示匹配1到多个，最小是一个，?表示匹配0个或1个，也就是要么有要么没有
+#网址正则reg=/^([hH][tT]{2}[pP]:\/\/|[hH][tT]{2}[pP][sS]:\/\/)(([A-Za-z0-9-~]+)\.)+([A-Za-z0-9-~\/])+$/
+import requests
+import re
+from bs4 import BeautifulSoup  
+
+def get_pdf_links(pdf_url):
+	r = requests.get(pdf_url)
+	soup = BeautifulSoup(r.content, 'html5lib')
+	
+	pdf_links = []
+	for link in soup.find_all('a'):
+		#print("aaa")
+		print(link)
+		href = link.get('href')
+		if not href:continue
+		print("ks")
+		asciiStrHref = href.encode("ascii")
+		if(asciiStrHref.endswith('.pdf')):
+			pdf_links.append(href)
+			print(pdf_links)
+	return pdf_links
+
+def downLoad_pdfs_EnglishVersion(pdf_links):
+	localDir = 'D:\downloadPDF\\'        #下载PDF文件需要存储在本地的文件夹
+	for pdf_link in pdf_links:
+		file_name = pdf_link.split('/')[-1]
+		#从尾到头数，第一个索引是-1
+		r = requests.get(pdf_link,stream=True)
+		localPDF = localDir + file_name
+		#download started
+		with open(localPDF,'wb') as f:
+			for chunk in r.iter_content(chunk_size=1024*1024):
+				if chunk:
+					try:
+						f.write(chunk)
+					except Exception as e:
+						print(e)
+						continue
+		print("%s downloaded!\n" % file_name)
+	print("All pdfs downloaded!")
+	#return 
+
+#get_pdf_links('https://www.cbd.int/conferences/2016/cop-13/documents')
+#pdf_links = get_pdf_links('http://www.ipcv.org/2014-cvpr/')----ok
+
+#总地址：pdf_links = get_pdf_links('https://www.cbd.int/cop/')
+pdf_links = get_pdf_links('https://www.cbd.int/conferences/2016/cop-13/documents')
+#pdf_links = get_pdf_links('https://www.cbd.int/conferences/2018/cop-14/documents')
+#pdf_links = get_pdf_links('https://www.cbd.int/meetings/EXCOP-01')
+
+downLoad_pdfs_EnglishVersion(pdf_links)
+#downLoad_pdfs_EnglishVersion(pdf_links)
+#以上两句总结为:downLoad_pdfs_EnglishVersion(get_pdf_links('http://www.ipcv.org/2014-cvpr/'))
